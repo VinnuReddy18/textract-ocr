@@ -204,10 +204,10 @@
             selectedFiles.forEach(file => formData.append('documents', file));
 
             try {
-                const response = await fetch('https://textract-ocr.vercel.app/analyze', {
-                    method: 'POST',
-                    body: formData
-                });
+                const response = await fetch('/analyze', {
+    method: 'POST',
+    body: formData
+});
                 
                 if (!response.ok) {
                     const errorText = await response.text();

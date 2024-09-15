@@ -4,10 +4,9 @@
   "description": "A web application for analyzing images using AWS Textract",
   "main": "src/server.js",
   "scripts": {
-  "start": "node src/server.js",
-  "build": "npm install",
-  "test": "echo \"Error: no test specified\" && exit 1"
-},
+    "start": "node src/server.js",
+    "build": "npm install"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

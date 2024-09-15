@@ -92,16 +92,4 @@ app.get('/', (req, res) => {
     res.send('Server is running');
 });
 
-const PORT = process.env.PORT || 5050;
-if (process.env.NODE_ENV !== 'production') {
-    const PORT = process.env.PORT || 5050;
-    app.listen(PORT, (err) => {
-      if (err) {
-        console.error('Error starting server:', err);
-      } else {
-        console.log(`Server running on port ${PORT}`);
-      }
-    });
-
-};
 module.exports = app;
