@@ -2,8 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image to Text</title>
+    <title>Image to Text and Table</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -116,61 +115,116 @@
             color: #7f8c8d;
             margin-top: 10px;
         }
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .loading-spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Image to Text</h1>
-        <div class="upload-area" id="uploadArea">
-            <p>Click or drag images here to upload</p>
-            <p class="file-limit">Maximum 20 images allowed</p>
+        <h1>Image to Text and Table</h1>
+        
+        <div class="section">
+            <h2>Text Extraction</h2>
+            <div class="upload-area" id="uploadAreaText">
+                <p>Click or drag images here to upload for text extraction</p>
+                <p class="file-limit">Maximum 20 images allowed</p>
+            </div>
+            <form id="uploadFormText">
+                <input type="file" id="fileInputText" class="file-input" name="documents" multiple accept=".png,.jpg,.jpeg">
+                <button type="button" class="btn download-btn" data-format="txt">Download Text</button>
+                <button type="button" class="btn download-btn" data-format="csv">Download CSV</button>
+            </form>
+            <div id="imagePreviewText"></div>
         </div>
-        <form id="uploadForm">
-            <input type="file" id="fileInput" name="documents" multiple accept=".png,.jpg,.jpeg">
-            <button type="submit" class="btn">Download</button>
-        </form>
-        <div id="imagePreview"></div>
+
+        <div class="section">
+            <h2>Table Extraction</h2>
+            <div class="upload-area" id="uploadAreaTable">
+                <p>Click or drag images here to upload for table extraction</p>
+                <p class="file-limit">Maximum 20 images allowed</p>
+            </div>
+            <form id="uploadFormTable">
+                <input type="file" id="fileInputTable" class="file-input" name="documents" multiple accept=".png,.jpg,.jpeg">
+                <button type="button" class="btn download-btn" data-format="txt">Download Text</button>
+                <button type="button" class="btn download-btn" data-format="csv">Download CSV</button>
+            </form>
+            <div id="imagePreviewTable"></div>
+        </div>
+
         <div id="results"></div>
     </div>
 
+    <div class="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+
     <script>
-        const uploadArea = document.getElementById('uploadArea');
-        const imagePreview = document.getElementById('imagePreview');
-        const uploadForm = document.getElementById('uploadForm');
-        const fileInput = document.getElementById('fileInput');
-        let selectedFiles = [];
+        // Text Extraction Variables
+        const uploadAreaText = document.getElementById('uploadAreaText');
+        const imagePreviewText = document.getElementById('imagePreviewText');
+        const fileInputText = document.getElementById('fileInputText');
+        let selectedFilesText = [];
 
-        uploadArea.addEventListener('click', () => fileInput.click());
-        uploadArea.addEventListener('dragover', (e) => {
+        // Table Extraction Variables
+        const uploadAreaTable = document.getElementById('uploadAreaTable');
+        const imagePreviewTable = document.getElementById('imagePreviewTable');
+        const fileInputTable = document.getElementById('fileInputTable');
+        let selectedFilesTable = [];
+
+        // Text Extraction Event Listeners
+        uploadAreaText.addEventListener('click', () => fileInputText.click());
+        uploadAreaText.addEventListener('dragover', (e) => {
             e.preventDefault();
-            uploadArea.style.backgroundColor = '#f0f0f0';
+            uploadAreaText.style.backgroundColor = '#f0f0f0';
         });
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.style.backgroundColor = '';
+        uploadAreaText.addEventListener('dragleave', () => {
+            uploadAreaText.style.backgroundColor = '';
         });
-        uploadArea.addEventListener('drop', (e) => {
+        uploadAreaText.addEventListener('drop', (e) => {
             e.preventDefault();
-            uploadArea.style.backgroundColor = '';
+            uploadAreaText.style.backgroundColor = '';
             const files = e.dataTransfer.files;
-            handleFiles(files);
+            handleFilesText(files);
         });
 
-        fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+        fileInputText.addEventListener('change', (e) => handleFilesText(e.target.files));
 
-        function handleFiles(files) {
+        function handleFilesText(files) {
             const newFiles = Array.from(files);
-            const totalFiles = selectedFiles.length + newFiles.length;
+            const totalFiles = selectedFilesText.length + newFiles.length;
             if (totalFiles > 20) {
                 alert('You can only upload a maximum of 20 images.');
                 return;
             }
-            selectedFiles = [...selectedFiles, ...newFiles];
-            updateImagePreview();
+            selectedFilesText = [...selectedFilesText, ...newFiles];
+            updateImagePreviewText();
         }
 
-        function updateImagePreview() {
-            imagePreview.innerHTML = '';
-            selectedFiles.forEach((file, index) => {
+        function updateImagePreviewText() {
+            imagePreviewText.innerHTML = '';
+            selectedFilesText.forEach((file, index) => {
                 const container = document.createElement('div');
                 container.className = 'image-container';
 
@@ -183,44 +237,122 @@
                 deleteBtn.className = 'delete-btn';
                 deleteBtn.onclick = (e) => {
                     e.preventDefault();
-                    selectedFiles.splice(index, 1);
-                    updateImagePreview();
+                    selectedFilesText.splice(index, 1);
+                    updateImagePreviewText();
                 };
 
                 container.appendChild(img);
                 container.appendChild(deleteBtn);
-                imagePreview.appendChild(container);
+                imagePreviewText.appendChild(container);
             });
         }
 
-        uploadForm.addEventListener('submit', async (e) => {
+        // Table Extraction Event Listeners
+        uploadAreaTable.addEventListener('click', () => fileInputTable.click());
+        uploadAreaTable.addEventListener('dragover', (e) => {
             e.preventDefault();
-            if (selectedFiles.length === 0) {
+            uploadAreaTable.style.backgroundColor = '#f0f0f0';
+        });
+        uploadAreaTable.addEventListener('dragleave', () => {
+            uploadAreaTable.style.backgroundColor = '';
+        });
+        uploadAreaTable.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadAreaTable.style.backgroundColor = '';
+            const files = e.dataTransfer.files;
+            handleFilesTable(files);
+        });
+
+        fileInputTable.addEventListener('change', (e) => handleFilesTable(e.target.files));
+
+        // Handle files for table extraction
+function handleFilesTable(files) {
+    const newFiles = Array.from(files);
+    const totalFiles = selectedFilesTable.length + newFiles.length;
+    if (totalFiles > 20) {
+        alert('You can only upload a maximum of 20 images.');
+        return;
+    }
+    selectedFilesTable = [...selectedFilesTable, ...newFiles];
+    updateImagePreviewTable();
+}
+
+
+        function updateImagePreviewTable() {
+            imagePreviewTable.innerHTML = '';
+            selectedFilesTable.forEach((file, index) => {
+                const container = document.createElement('div');
+                container.className = 'image-container';
+
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(file);
+                img.onload = () => URL.revokeObjectURL(img.src);
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = '×';
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.onclick = (e) => {
+                    e.preventDefault();
+                    selectedFilesTable.splice(index, 1);
+                    updateImagePreviewTable();
+                };
+
+                container.appendChild(img);
+                container.appendChild(deleteBtn);
+                imagePreviewTable.appendChild(container);
+            });
+        }
+
+        // Attach click event listeners to the buttons
+        // For Text Extraction Buttons
+        document.querySelectorAll('#uploadFormText .download-btn').forEach(button => {
+            button.addEventListener('click', e => handleSubmit(e, 'text'));
+        });
+
+        // For Table Extraction Buttons
+        document.querySelectorAll('#uploadFormTable .download-btn').forEach(button => {
+            button.addEventListener('click', e => handleSubmit(e, 'table'));
+        });
+
+        function handleSubmit(e, extractionType) {
+            e.preventDefault();
+            const files = extractionType === 'text' ? selectedFilesText : selectedFilesTable;
+            if (files.length === 0) {
                 alert('Please select at least one image to analyze.');
                 return;
             }
 
             const formData = new FormData();
-            selectedFiles.forEach(file => formData.append('documents', file));
+            files.forEach(file => formData.append('documents', file));
 
-            try {
-                const response = await fetch('/analyze', {
-    method: 'POST',
-    body: formData
-});
-                
+            const format = e.currentTarget.getAttribute('data-format');
+
+            // Show loading overlay
+            document.querySelector('.loading-overlay').style.display = 'flex';
+
+            fetch(`/analyze?format=${format}&type=${extractionType}`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error('An error occurred: ' + errorText);
+                    return response.text().then(text => { throw new Error(text) });
                 }
-                
-                const blob = await response.blob();
-                downloadFile(blob, 'analysis_results.txt');
-            } catch (error) {
+                return response.blob();
+            })
+            .then(blob => {
+                const extension = format;
+                downloadFile(blob, `analysis_results.${extension}`);
+            })
+            .catch(error => {
                 console.error('Error:', error);
                 alert('An error occurred during analysis: ' + error.message);
-            }
-        });
+            })
+            .finally(() => {
+                // Hide loading overlay
+                document.querySelector('.loading-overlay').style.display = 'none';
+            });
+        }
 
         function downloadFile(blob, fileName) {
             const url = URL.createObjectURL(blob);
