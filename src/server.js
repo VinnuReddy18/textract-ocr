@@ -50,29 +50,23 @@ app.post('/analyze', upload.array('documents', 20), async (req, res) => {
 
         console.log(`Formatting results as ${format} for ${extractionType} extraction`);
 
+        let formattedContent;
         if (format === 'csv') {
+            formattedContent = formatResultsAsCsv(results, extractionType);
             res.setHeader('Content-Type', 'text/csv');
             res.setHeader('Content-Disposition', 'attachment; filename=analysis_results.csv');
-            const csvContent = formatResultsAsCsv(results, extractionType);
-            console.log('CSV content generated');
-            res.send(csvContent);
-        } else if (format === 'excel') {
-            const excelBuffer = await formatResultsAsExcel(results, extractionType);
-            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-            res.setHeader('Content-Disposition', 'attachment; filename=analysis_results.xlsx');
-            console.log('Excel content generated');
-            res.send(excelBuffer);
         } else {
+            formattedContent = formatResultsAsTxt(results, extractionType);
             res.setHeader('Content-Type', 'text/plain');
             res.setHeader('Content-Disposition', 'attachment; filename=analysis_results.txt');
-            const txtContent = formatResultsAsTxt(results, extractionType);
-            console.log('Text content generated');
-            res.send(txtContent);
         }
+        
+        console.log('Formatted content:', formattedContent);
+        res.send(formattedContent);
         console.log('Response sent successfully');
     } catch (error) {
         console.error('Error in analyze route:', error);
-        res.status(500).json({ error: 'An error occurred during analysis', details: error.message });
+        res.status(500).json({ error: 'An error occurred during analysis', details: error.message, stack: error.stack });
     }
 });
 
@@ -119,13 +113,17 @@ function formatResultsAsCsv(results, extractionType) {
             csvContent += `Image ${result.index},Error: ${result.error}\n`;
         } else if (extractionType === 'text') {
             console.log(`Formatting text as CSV for image ${result.index}`);
-            csvContent += `Image ${result.index},${result.text.replace(/\n/g, ' ')}\n`;
+            csvContent += `Image ${result.index},${(result.text || '').replace(/\n/g, ' ')}\n`;
         } else if (extractionType === 'table' && result.tables && result.tables.length > 0) {
             console.log(`Formatting tables as CSV for image ${result.index}`);
             result.tables.forEach((table, tableIndex) => {
                 csvContent += `Table ${tableIndex + 1}\n`;
                 table.rows.forEach(row => {
-                    csvContent += row.map(cell => `"${(cell || '').replace(/"/g, '""')}"`).join(',') + '\n';
+                    csvContent += row.map(cell => {
+                        // Ensure cell is a string before calling replace
+                        const cellText = (cell && typeof cell === 'object' && 'text' in cell) ? cell.text : String(cell || '');
+                        return `"${cellText.replace(/"/g, '""')}"`;
+                    }).join(',') + '\n';
                 });
                 csvContent += '\n';
             });
